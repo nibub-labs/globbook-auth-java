@@ -3,6 +3,7 @@ name: Publish to Maven Central
 on:
   release:
     types: [published]
+  workflow_dispatch: {} # allows an on-demand manual run to test the pipeline without cutting a new release
 
 jobs:
   deploy:
