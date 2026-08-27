@@ -29,7 +29,11 @@ jobs:
         run: mvn -B test
 
       - name: Deploy to Maven Central
-        run: mvn -B -Prelease deploy
+        # -Dgpg.passphrase is maven-gpg-plugin's own recognized property —
+        # the setup-java gpg-passphrase input only wires up settings.xml's
+        # security dispatcher (settings-security.xml), which the plugin
+        # never actually consults, so that alone silently doesn't work.
+        run: mvn -B -Prelease -Dgpg.passphrase="$GPG_PASSPHRASE" deploy
         env:
           CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}

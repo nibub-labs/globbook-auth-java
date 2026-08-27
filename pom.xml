@@ -106,11 +106,13 @@
           <plugin>
             <!--
               GPG signing — required by Maven Central for every published
-              artifact. Reads the signing key from the GPG_TTY-less
-              "loopback" pinentry mode so it works non-interactively in
-              CI, with the passphrase supplied via the gpg.passphrase
-              property (set from a secret in deploy.yml — never commit a
-              real passphrase to this file).
+              artifact. Runs non-interactively via "loopback" pinentry
+              mode; the passphrase is supplied on the command line as
+              -Dgpg.passphrase (see deploy.yml, sourced from a secret —
+              never commit a real passphrase to this file). Passing it any
+              other way (e.g. only via setup-java's gpg-passphrase input,
+              which just wires settings-security.xml) does NOT work — this
+              plugin never reads that file.
             -->
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
