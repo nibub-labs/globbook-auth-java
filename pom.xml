@@ -29,6 +29,7 @@
   <scm>
     <url>https://github.com/nibub-labs/globbook-auth-java</url>
     <connection>scm:git:https://github.com/nibub-labs/globbook-auth-java.git</connection>
+    <developerConnection>scm:git:git@github.com:nibub-labs/globbook-auth-java.git</developerConnection>
   </scm>
 
   <properties>
@@ -64,4 +65,94 @@
       </plugin>
     </plugins>
   </build>
+
+  <!--
+    Activated only for a Maven Central release (mvn -Prelease deploy), not
+    on every CI build — signing/sources/javadoc generation adds real time
+    and requires a GPG key + Central credentials that CI's plain test
+    matrix (.github/workflows/ci.yml) never needs.
+  -->
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.3.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.6.3</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <!--
+              GPG signing — required by Maven Central for every published
+              artifact. Reads the signing key from the GPG_TTY-less
+              "loopback" pinentry mode so it works non-interactively in
+              CI, with the passphrase supplied via the gpg.passphrase
+              property (set from a secret in deploy.yml — never commit a
+              real passphrase to this file).
+            -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.2.4</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
+          </plugin>
+          <plugin>
+            <!--
+              Publishes to Maven Central via Sonatype's Central Publisher
+              Portal API (the current replacement for the legacy OSSRH
+              "close and release a staging repository" flow). Credentials
+              come from ~/.m2/settings.xml's <server id="central"> entry
+              (see deploy.yml, which writes it from CENTRAL_TOKEN_USERNAME/
+              CENTRAL_TOKEN_PASSWORD secrets) — a user token generated at
+              https://central.sonatype.com/account, not your account
+              password.
+            -->
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.5.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>false</autoPublish>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
